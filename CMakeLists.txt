@@ -105,7 +105,7 @@ include(CheckCXXSourceCompiles)
 # Subsequent commands will append to this
 ################################################################################
 set(Z3_COMPONENT_CXX_DEFINES "")
-set(Z3_COMPONENT_CXX_FLAGS "-Wno-zero-length-array" "-Wno-gnu-zero-variadic-macro-arguments" "-Wno-c99-extensions" "-Wno-gnu-anonymous-struct" "-Wno-nested-anon-types" )
+set(Z3_COMPONENT_CXX_FLAGS "-Wno-zero-length-array" "-Wno-gnu-zero-variadic-macro-arguments" "-Wno-c99-extensions" "-Wno-gnu-anonymous-struct" "-Wno-nested-anon-types")
 set(Z3_COMPONENT_EXTRA_INCLUDE_DIRS "")
 set(Z3_DEPENDENT_LIBS "")
 set(Z3_DEPENDENT_EXTRA_CXX_LINK_FLAGS "")
@@ -520,12 +520,12 @@ if ("${CMAKE_VERSION}" VERSION_LESS "3.0")
   # FIXME: Remove this once we drop support for CMake 2.8.12
   export(TARGETS libz3
     NAMESPACE z3::
-    FILE "${PROJECT_BINARY_DIR}/Z3Targets.cmake"
+    FILE "${PROJECT_BINARY_DIR}/cmake/Z3Targets.cmake"
   )
 else()
   export(EXPORT Z3_EXPORTED_TARGETS
     NAMESPACE z3::
-    FILE "${PROJECT_BINARY_DIR}/Z3Targets.cmake"
+    FILE "${PROJECT_BINARY_DIR}/cmake/Z3Targets.cmake"
   )
 endif()
 set(Z3_FIRST_PACKAGE_INCLUDE_DIR "${PROJECT_BINARY_DIR}/src/api")
@@ -557,7 +557,7 @@ install(EXPORT
   Z3_EXPORTED_TARGETS
   FILE "Z3Targets.cmake"
   NAMESPACE z3::
-  DESTINATION "${CMAKE_INSTALL_Z3_CMAKE_PACKAGE_DIR}"
+  DESTINATION "${PROJECT_BINARY_DIR}/cmake"
 )
 set(Z3_INSTALL_TREE_CMAKE_CONFIG_FILE "${PROJECT_BINARY_DIR}/cmake/Z3Config.cmake")
 set(Z3_FIRST_PACKAGE_INCLUDE_DIR "${CMAKE_INSTALL_INCLUDEDIR}")

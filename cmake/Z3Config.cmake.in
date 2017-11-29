@@ -11,7 +11,7 @@
 ################################################################################
 
 # Exported targets
-include("${CMAKE_CURRENT_LIST_DIR}/Z3Targets.cmake")
+include("${PROJECT_BINARY_DIR}/cmake/Z3Targets.cmake")
 
 @PACKAGE_INIT@
 
