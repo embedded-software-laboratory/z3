@@ -35,54 +35,57 @@ Revision History:
 
 class func_interp;
 
-class func_entry {
-    bool   m_args_are_values; //!< true if is_value(m_args[i]) is true for all i in [0, arity)
+class func_entry
+{
+    bool m_args_are_values; //!< true if is_value(m_args[i]) is true for all i in [0, arity)
 
     // m_result and m_args[i] must be ground terms.
 
-    expr * m_result;
-    expr * m_args[];
+    expr *m_result;
+    expr *m_args[];
 
-    static unsigned get_obj_size(unsigned arity) { return sizeof(func_entry) + arity * sizeof(expr*); }
-    func_entry(ast_manager & m, unsigned arity, expr * const * args, expr * result);
+    static unsigned get_obj_size(unsigned arity) { return sizeof(func_entry) + arity * sizeof(expr *); }
+    func_entry(ast_manager &m, unsigned arity, expr *const *args, expr *result);
 
     friend class func_interp;
 
-    void set_result(ast_manager & m, expr * r);
+    void set_result(ast_manager &m, expr *r);
 
 public:
-    static func_entry * mk(ast_manager & m, unsigned arity, expr * const * args, expr * result);
+    static func_entry *mk(ast_manager &m, unsigned arity, expr *const *args, expr *result);
     bool args_are_values() const { return m_args_are_values; }
-    void deallocate(ast_manager & m, unsigned arity);
-    expr * get_result() const { return m_result; }
-    expr * get_arg(unsigned idx) const { return m_args[idx]; }
-    expr * const * get_args() const { return m_args; }
+    void deallocate(ast_manager &m, unsigned arity);
+    expr *get_result() const { return m_result; }
+    expr *get_arg(unsigned idx) const { return m_args[idx]; }
+    expr *const *get_args() const { return m_args; }
     /**
        \brief Return true if m.are_equal(m_args[i], args[i]) for all i in [0, arity)
     */
-    bool eq_args(ast_manager & m, unsigned arity, expr * const * args) const;
+    bool eq_args(ast_manager &m, unsigned arity, expr *const *args) const;
 };
 
-class func_interp {
-    ast_manager &          m_manager;
-    unsigned               m_arity;
+class func_interp
+{
+    ast_manager &m_manager;
+    unsigned m_arity;
     ptr_vector<func_entry> m_entries;
-    expr *                 m_else;
-    bool                   m_args_are_values; //!< true if forall e in m_entries e.args_are_values() == true
+    expr *m_else;
+    bool m_args_are_values; //!< true if forall e in m_entries e.args_are_values() == true
 
-    expr *                 m_interp; //!< cache for representing the whole interpretation as a single expression (it uses ite terms).
+    expr
+        *m_interp; //!< cache for representing the whole interpretation as a single expression (it uses ite terms).
 
     void reset_interp_cache();
 
-    expr * get_interp_core() const;
+    expr *get_interp_core() const;
 
 public:
-    func_interp(ast_manager & m, unsigned arity);
+    func_interp(ast_manager &m, unsigned arity);
     ~func_interp();
 
-    ast_manager & m () const { return m_manager; }
+    ast_manager &m() const { return m_manager; }
 
-    func_interp * copy() const;
+    func_interp *copy() const;
 
     unsigned get_arity() const { return m_arity; }
 
@@ -93,26 +96,26 @@ public:
     // Return true if all arguments of the function graph are values.
     bool args_are_values() const { return m_args_are_values; }
 
-    expr * get_else() const { return m_else; }
-    void set_else(expr * e);
+    expr *get_else() const { return m_else; }
+    void set_else(expr *e);
 
-    void insert_entry(expr * const * args, expr * r);
-    void insert_new_entry(expr * const * args, expr * r);
-    func_entry * get_entry(expr * const * args) const;
-    bool eval_else(expr * const * args, expr_ref & result) const;
+    void insert_entry(expr *const *args, expr *r);
+    void insert_new_entry(expr *const *args, expr *r);
+    func_entry *get_entry(expr *const *args) const;
+    bool eval_else(expr *const *args, expr_ref &result) const;
     unsigned num_entries() const { return m_entries.size(); }
-    func_entry const * const * get_entries() const { return m_entries.c_ptr(); }
-    func_entry const * get_entry(unsigned idx) const { return m_entries[idx]; }
+    func_entry const *const *get_entries() const { return m_entries.c_ptr(); }
+    func_entry const *get_entry(unsigned idx) const { return m_entries[idx]; }
 
-    expr * get_max_occ_result() const;
+    expr *get_max_occ_result() const;
     void compress();
 
-    expr * get_interp() const;
+    expr *get_interp() const;
 
-    func_interp * translate(ast_translation & translator) const;
+    func_interp *translate(ast_translation &translator) const;
 
 private:
-    bool is_fi_entry_expr(expr * e, ptr_vector<expr> & args);
+    bool is_fi_entry_expr(expr *e, ptr_vector<expr> &args);
 };
 
 #endif

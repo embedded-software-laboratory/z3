@@ -19,15 +19,18 @@ Revision History:
 --*/
 #pragma once
 #include "util/lp/linear_combination_iterator.h"
-namespace lp {
+#include "util/lp/static_matrix.h"
+namespace lp
+{
 template <typename T>
-struct iterator_on_row:linear_combination_iterator<T> {
-    const vector<row_cell<T>> & m_row;
+struct iterator_on_row : linear_combination_iterator<T>
+{
+    const vector<row_cell<T>> &m_row;
     unsigned m_i; // offset
-    iterator_on_row(const vector<row_cell<T>> & row) : m_row(row), m_i(0)
-    {}
+    iterator_on_row(const vector<row_cell<T>> &row) : m_row(row), m_i(0) {}
     unsigned size() const { return m_row.size(); }
-    bool next(T & a, unsigned & i) {
+    bool next(T &a, unsigned &i)
+    {
         if (m_i == m_row.size())
             return false;
         auto &c = m_row[m_i++];
@@ -35,18 +38,15 @@ struct iterator_on_row:linear_combination_iterator<T> {
         a = c.get_val();
         return true;
     }
-    bool next(unsigned & i) {
+    bool next(unsigned &i)
+    {
         if (m_i == m_row.size())
             return false;
         auto &c = m_row[m_i++];
         i = c.m_j;
         return true;
     }
-    void reset() {
-        m_i = 0;
-    }
-    linear_combination_iterator<T>* clone() {
-        return new iterator_on_row(m_row);
-    }
+    void reset() { m_i = 0; }
+    linear_combination_iterator<T> *clone() { return new iterator_on_row(m_row); }
 };
 }
