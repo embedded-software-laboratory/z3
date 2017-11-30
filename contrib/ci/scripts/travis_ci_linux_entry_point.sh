@@ -30,8 +30,8 @@ if [ -n "${Z3_CMAKE_GENERATOR}" ]; then
   BUILD_OPTS+=("--build-arg" "Z3_CMAKE_GENERATOR=${Z3_CMAKE_GENERATOR}")
 fi
 
-if [ -n "${USE_OPENMP}" ]; then
-  BUILD_OPTS+=("--build-arg" "USE_OPENMP=${USE_OPENMP}")
+if [ -n "${Z3_USE_OPENMP}" ]; then
+  BUILD_OPTS+=("--build-arg" "Z3_USE_OPENMP=${Z3_USE_OPENMP}")
 fi
 
 if [ -n "${USE_LIBGMP}" ]; then

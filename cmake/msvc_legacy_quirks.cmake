@@ -121,7 +121,7 @@ z3_add_cxx_flag("/analyze-" REQUIRED)
 string(TOUPPER "${available_build_types}" _build_types_as_upper)
 foreach (_build_type ${_build_types_as_upper})
   foreach (t EXE SHARED STATIC)
-    set(_replacement "/INCREMENTAL:NO")
+    set(_replacement "")
     # Remove any existing incremental flags
     string(REGEX REPLACE
       "/INCREMENTAL:YES"
@@ -184,7 +184,7 @@ foreach (_build_type ${_build_types_as_upper})
     # Address space layout randomization
     # See https://msdn.microsoft.com/en-us/library/bb384887.aspx
     string(APPEND CMAKE_EXE_LINKER_FLAGS_${_build_type} " /DYNAMICBASE")
-    if(ENABLE_CFI)
+    if(Z3_ENABLE_CFI)
       # CFI requires /DYNAMICBASE to be enabled.
       string(APPEND CMAKE_SHARED_LINKER_FLAGS_${_build_type} " /DYNAMICBASE")
     else()

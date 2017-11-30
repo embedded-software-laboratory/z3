@@ -1,5 +1,5 @@
 # Enforce some CMake policies
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.3)
 if (POLICY CMP0054)
   # FIXME: This is horrible. With the old behaviour,
   # quoted strings like "MSVC" in if() conditionals
@@ -14,20 +14,8 @@ if (POLICY CMP0054)
   cmake_policy(SET CMP0054 OLD)
 endif()
 
-if (POLICY CMP0042)
-  # Enable `MACOSX_RPATH` by default.
-  cmake_policy(SET CMP0042 NEW)
-endif()
-
 set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxx_compiler_flags_overrides.cmake")
 project(Z3 CXX)
-
-if ("${CMAKE_VERSION}" VERSION_LESS "3.4")
-  # FIXME: Drop this when we upgrade to newer CMake versions.
-  # HACK: Although we don't need C language support if it is not
-  # enabled CMake's `FindThreads` module fails in old CMake versions.
-  enable_language(C)
-endif()
 
 ################################################################################
 # Project version
@@ -71,14 +59,6 @@ endif()
 # Add our CMake module directory to the list of module search directories
 ################################################################################
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
-
-################################################################################
-# Don't handle git hash and description
-################################################################################
-include(${PROJECT_SOURCE_DIR}/cmake/git_utils.cmake)
-set(INCLUDE_GIT_DESCRIBE OFF CACHE BOOL "Include git describe output in version output" FORCE)
-set(INCLUDE_GIT_HASH OFF CACHE BOOL "Include git hash in version output" FORCE)
-unset(Z3GITHASH) # Used in configure_file()
 
 ################################################################################
 # Useful CMake functions/Macros
@@ -193,8 +173,8 @@ list(APPEND Z3_COMPONENT_EXTRA_INCLUDE_DIRS
 ################################################################################
 # GNU multiple precision library support
 ################################################################################
-option(USE_LIB_GMP "Use GNU Multiple Precision Library" OFF)
-if (USE_LIB_GMP)
+option(Z3_USE_LIB_GMP "Use GNU Multiple Precision Library" OFF)
+if (Z3_USE_LIB_GMP)
   # Because this is off by default we will make the configure fail if libgmp
   # can't be found
   find_package(GMP REQUIRED)
@@ -212,20 +192,20 @@ endif()
 ################################################################################
 find_package(OpenMP)
 if (OPENMP_FOUND)
-  set(USE_OPENMP_DEFAULT ON)
+  set(Z3_USE_OPENMP_DEFAULT ON)
 else()
-  set(USE_OPENMP_DEFAULT OFF)
+  set(Z3_USE_OPENMP_DEFAULT OFF)
 endif()
-# By setting `USE_OPENMP` this way configuration will fail during the first
-# configure if the user explicitly passes `-DUSE_OPENMP=ON` and the compiler
+# By setting `Z3_USE_OPENMP` this way configuration will fail during the first
+# configure if the user explicitly passes `-DZ3_USE_OPENMP=ON` and the compiler
 # does not support OpenMP. However if the option is not set explicitly during
 # the first configure OpenMP support will be automatically enabled/disabled
 # depending on whether OpenMP is available.
-option(USE_OPENMP "Use OpenMP" ${USE_OPENMP_DEFAULT})
+option(Z3_USE_OPENMP "Use OpenMP" ${Z3_USE_OPENMP_DEFAULT})
 
-if (USE_OPENMP)
+if (Z3_USE_OPENMP)
   if (NOT OPENMP_FOUND)
-    message(FATAL_ERROR "USE_OPENMP is ON but your compiler does not support OpenMP")
+    message(FATAL_ERROR "Z3_USE_OPENMP is ON but your compiler does not support OpenMP")
   endif()
 
   list(APPEND Z3_COMPONENT_CXX_FLAGS ${OpenMP_CXX_FLAGS})
@@ -246,18 +226,18 @@ endif()
 ################################################################################
 # API Log sync
 ################################################################################
-option(API_LOG_SYNC
+option(Z3_API_LOG_SYNC
   "Use locking when logging Z3 API calls (experimental)"
   OFF
 )
-if (API_LOG_SYNC)
-  if (NOT USE_OPENMP)
-    message(FATAL_ERROR "API_LOG_SYNC feature requires OpenMP")
+if (Z3_API_LOG_SYNC)
+  if (NOT Z3_USE_OPENMP)
+    message(FATAL_ERROR "Z3_API_LOG_SYNC feature requires OpenMP")
   endif()
   list(APPEND Z3_COMPONENT_CXX_DEFINES "-DZ3_LOG_SYNC")
-  message(STATUS "Using API_LOG_SYNC")
+  message(STATUS "Using Z3_API_LOG_SYNC")
 else()
-  message(STATUS "Not using API_LOG_SYNC")
+  message(STATUS "Not using Z3_API_LOG_SYNC")
 endif()
 
 ################################################################################
@@ -305,7 +285,7 @@ include(${PROJECT_SOURCE_DIR}/cmake/compiler_warnings.cmake)
 ################################################################################
 # Option to control what type of library we build
 ################################################################################
-option(BUILD_LIBZ3_SHARED "Build libz3 as a shared library if true, otherwise build a static library" OFF)
+option(Z3_BUILD_LIBZ3_SHARED "Build libz3 as a shared library if true, otherwise build a static library" OFF)
 
 
 ################################################################################
@@ -318,8 +298,8 @@ endif()
 ################################################################################
 # Tracing
 ################################################################################
-option(ENABLE_TRACING_FOR_NON_DEBUG "Enable tracing in non-debug builds." OFF)
-if (ENABLE_TRACING_FOR_NON_DEBUG)
+option(Z3_ENABLE_TRACING_FOR_NON_DEBUG "Enable tracing in non-debug builds." OFF)
+if (Z3_ENABLE_TRACING_FOR_NON_DEBUG)
   list(APPEND Z3_COMPONENT_CXX_DEFINES "-D_TRACE")
 else()
   # Tracing is always enabled in debug builds
@@ -332,7 +312,7 @@ endif()
 # This is required because code built in the components will end up in a shared
 # library. If not building a shared library ``-fPIC`` isn't needed and would add
 # unnecessary overhead.
-if (BUILD_LIBZ3_SHARED)
+if (Z3_BUILD_LIBZ3_SHARED)
   # Avoid adding -fPIC compiler switch if we compile with MSVC (which does not
   # support the flag) or if we target Windows, which generally does not use
   # position independent code for native code shared libraries (DLLs).
@@ -349,12 +329,12 @@ include(${PROJECT_SOURCE_DIR}/cmake/compiler_lto.cmake)
 ################################################################################
 # Control flow integrity
 ################################################################################
-option(ENABLE_CFI "Enable control flow integrity checking" OFF)
-if (ENABLE_CFI)
+option(Z3_ENABLE_CFI "Enable control flow integrity checking" OFF)
+if (Z3_ENABLE_CFI)
   set(build_types_with_cfi "RELEASE" "RELWITHDEBINFO")
-  if (NOT LINK_TIME_OPTIMIZATION)
+  if (NOT Z3_LINK_TIME_OPTIMIZATION)
     message(FATAL_ERROR "Cannot enable control flow integrity checking without link-time optimization."
-      "You should set LINK_TIME_OPTIMIZATION to ON or ENABLE_CFI to OFF.")
+      "You should set Z3_LINK_TIME_OPTIMIZATION to ON or Z3_ENABLE_CFI to OFF.")
   endif()
   if (DEFINED CMAKE_CONFIGURATION_TYPES)
     # Multi configuration generator
@@ -374,7 +354,7 @@ if (ENABLE_CFI)
     endforeach()
   else()
     message(FATAL_ERROR "Can't enable control flow integrity for compiler \"${CMAKE_CXX_COMPILER_ID}\"."
-      "You should set ENABLE_CFI to OFF or use Clang or MSVC to compile.")
+      "You should set Z3_ENABLE_CFI to OFF or use Clang or MSVC to compile.")
   endif()
 endif()
 
@@ -552,14 +532,3 @@ install(
   FILES "${Z3_INSTALL_TREE_CMAKE_CONFIG_FILE}"
   DESTINATION "${CMAKE_INSTALL_Z3_CMAKE_PACKAGE_DIR}"
 )
-
-################################################################################
-# Documentation
-################################################################################
-option(BUILD_DOCUMENTATION "Build API documentation" OFF)
-if (BUILD_DOCUMENTATION)
-  message(STATUS "Building documentation enabled")
-  add_subdirectory(doc)
-else()
-  message(STATUS "Building documentation disabled")
-endif()
