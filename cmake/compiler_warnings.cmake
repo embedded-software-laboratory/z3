@@ -124,6 +124,15 @@ elseif ("${WARNINGS_AS_ERRORS}" STREQUAL "SERIOUS_ONLY")
     # Add globally because some flags need to be passed at link time.
     z3_add_cxx_flag("${flag}" GLOBAL)
   endforeach()
+  if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU"))
+    list(APPEND Z3_COMPONENT_CXX_FLAGS "-Werror" "-Wno-zero-length-array" "-Wno-gnu-zero-variadic-macro-arguments" "-Wno-c99-extensions" "-Wno-gnu-anonymous-struct" "-Wno-nested-anon-types")
+    # FIXME: Remove "x.." when CMP0054 is set to NEW
+  elseif ("x${CMAKE_CXX_COMPILER_ID}" STREQUAL "xMSVC")
+  else()
+    message(AUTHOR_WARNING "Unknown compiler")
+  endif()
+  if ("x${CMAKE_CXX_COMPILER_ID}" STREQUAL "xMSVC")
+  endif()
 elseif ("${WARNINGS_AS_ERRORS}" STREQUAL "OFF")
   message(STATUS "Not treating compiler warnings as errors")
   # FIXME: Remove "x.." when CMP0054 is set to NEW

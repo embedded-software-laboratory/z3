@@ -43,15 +43,8 @@ message(STATUS "Z3 version ${Z3_VERSION}")
 ################################################################################
 # Set various useful variables depending on CMake version
 ################################################################################
-if (("${CMAKE_VERSION}" VERSION_EQUAL "3.2") OR ("${CMAKE_VERSION}" VERSION_GREATER "3.2"))
-  # In CMake >= 3.2 add_custom_command() and add_custom_target()
-  # supports a ``USES_TERMINAL`` argument
-  set(ADD_CUSTOM_COMMAND_USES_TERMINAL_ARG "USES_TERMINAL")
-  set(ADD_CUSTOM_TARGET_USES_TERMINAL_ARG "USES_TERMINAL")
-else()
-  set(ADD_CUSTOM_COMMAND_USES_TERMINAL_ARG "")
-  set(ADD_CUSTOM_TARGET_USES_TERMINAL_ARG "")
-endif()
+set(ADD_CUSTOM_COMMAND_USES_TERMINAL_ARG "USES_TERMINAL")
+set(ADD_CUSTOM_TARGET_USES_TERMINAL_ARG "USES_TERMINAL")
 
 ################################################################################
 # Message for polluted source tree sanity checks
@@ -80,20 +73,12 @@ endif()
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
 
 ################################################################################
-# Handle git hash and description
+# Don't handle git hash and description
 ################################################################################
 include(${PROJECT_SOURCE_DIR}/cmake/git_utils.cmake)
-macro(disable_git_describe)
-  message(WARNING "Disabling INCLUDE_GIT_DESCRIBE")
-  set(INCLUDE_GIT_DESCRIBE OFF CACHE BOOL "Include git describe output in version output" FORCE)
-endmacro()
-macro(disable_git_hash)
-  message(WARNING "Disabling INCLUDE_GIT_HASH")
-  set(INCLUDE_GIT_HASH OFF CACHE BOOL "Include git hash in version output" FORCE)
-  unset(Z3GITHASH) # Used in configure_file()
-endmacro()
-disable_git_describe()
-disable_git_hash()
+set(INCLUDE_GIT_DESCRIBE OFF CACHE BOOL "Include git describe output in version output" FORCE)
+set(INCLUDE_GIT_HASH OFF CACHE BOOL "Include git hash in version output" FORCE)
+unset(Z3GITHASH) # Used in configure_file()
 
 ################################################################################
 # Useful CMake functions/Macros
@@ -105,7 +90,7 @@ include(CheckCXXSourceCompiles)
 # Subsequent commands will append to this
 ################################################################################
 set(Z3_COMPONENT_CXX_DEFINES "")
-set(Z3_COMPONENT_CXX_FLAGS "-Wno-zero-length-array" "-Wno-gnu-zero-variadic-macro-arguments" "-Wno-c99-extensions" "-Wno-gnu-anonymous-struct" "-Wno-nested-anon-types")
+set(Z3_COMPONENT_CXX_FLAGS "")
 set(Z3_COMPONENT_EXTRA_INCLUDE_DIRS "")
 set(Z3_DEPENDENT_LIBS "")
 set(Z3_DEPENDENT_EXTRA_CXX_LINK_FLAGS "")
@@ -172,16 +157,6 @@ endif()
 # Function for detecting C++ compiler flag support
 ################################################################################
 include(${PROJECT_SOURCE_DIR}/cmake/z3_add_cxx_flag.cmake)
-
-################################################################################
-# C++ language version
-################################################################################
-# FIXME: Use CMake's own mechanism for selecting language version
-if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
-  #z3_add_cxx_flag("-std=c++11" REQUIRED)
-else()
-  message(AUTHOR_WARNING "Not setting C++ language version for compiler")
-endif()
 
 ################################################################################
 # Platform detection
@@ -330,7 +305,7 @@ include(${PROJECT_SOURCE_DIR}/cmake/compiler_warnings.cmake)
 ################################################################################
 # Option to control what type of library we build
 ################################################################################
-option(BUILD_LIBZ3_SHARED "Build libz3 as a shared library if true, otherwise build a static library" ON)
+option(BUILD_LIBZ3_SHARED "Build libz3 as a shared library if true, otherwise build a static library" OFF)
 
 
 ################################################################################
@@ -516,18 +491,10 @@ add_subdirectory(src)
 # use Z3 via CMake.
 ################################################################################
 include(CMakePackageConfigHelpers)
-if ("${CMAKE_VERSION}" VERSION_LESS "3.0")
-  # FIXME: Remove this once we drop support for CMake 2.8.12
-  export(TARGETS libz3
-    NAMESPACE z3::
-    FILE "${PROJECT_BINARY_DIR}/cmake/Z3Targets.cmake"
-  )
-else()
-  export(EXPORT Z3_EXPORTED_TARGETS
-    NAMESPACE z3::
-    FILE "${PROJECT_BINARY_DIR}/cmake/Z3Targets.cmake"
-  )
-endif()
+export(EXPORT Z3_EXPORTED_TARGETS
+  NAMESPACE z3::
+  FILE "${PROJECT_BINARY_DIR}/cmake/Z3Targets.cmake"
+)
 set(Z3_FIRST_PACKAGE_INCLUDE_DIR "${PROJECT_BINARY_DIR}/src/api")
 set(Z3_SECOND_PACKAGE_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/src/api")
 set(Z3_CXX_PACKAGE_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/src/api/c++")
@@ -559,6 +526,7 @@ install(EXPORT
   NAMESPACE z3::
   DESTINATION "${PROJECT_BINARY_DIR}/cmake"
 )
+
 set(Z3_INSTALL_TREE_CMAKE_CONFIG_FILE "${PROJECT_BINARY_DIR}/cmake/Z3Config.cmake")
 set(Z3_FIRST_PACKAGE_INCLUDE_DIR "${CMAKE_INSTALL_INCLUDEDIR}")
 set(Z3_SECOND_INCLUDE_DIR "")
@@ -584,17 +552,6 @@ install(
   FILES "${Z3_INSTALL_TREE_CMAKE_CONFIG_FILE}"
   DESTINATION "${CMAKE_INSTALL_Z3_CMAKE_PACKAGE_DIR}"
 )
-
-# TODO: Provide a `Z3Version.cmake` file so that clients can specify the version
-# of Z3 they want.
-
-################################################################################
-# Examples
-################################################################################
-option(ENABLE_EXAMPLE_TARGETS "Build Z3 api examples" ON)
-if (ENABLE_EXAMPLE_TARGETS)
-  add_subdirectory(examples)
-endif()
 
 ################################################################################
 # Documentation
